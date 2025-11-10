@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebView URL Override 测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .test-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .test-button {
+            background: linear-gradient(45deg, #007AFF, #5AC8FA);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,122,255,0.3);
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,122,255,0.4);
+        }
+        
+        .test-button:active {
+            transform: translateY(0);
+        }
+        
+        .method-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007AFF;
+            border-radius: 5px;
+        }
+        
+        .method-title {
+            font-weight: bold;
+            color: #007AFF;
+            margin-bottom: 10px;
+        }
+        
+        .log-area {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        a {
+            color: #007AFF;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">WebView shouldOverrideUrl 测试页面</h1>
+        
+        <div class="image-container">
+            <img src="https://ep-redflow-s1.xhscdn.com/oa_attachments/104103ao31mf502chi806h0cjh53000000000009p2c4gu.png?sign=a5ac164777c81ed23f18bd8ccf7f093c&t=68d00ff9" 
+                 alt="测试图片" 
+                 class="test-image" />
+        </div>
+        
+        <div class="method-section">
+            <div class="method-title">方法1: location.href 跳转</div>
+            <p>直接通过JavaScript设置location.href进行页面跳转</p>
+            <button class="test-button" onclick="jumpToImageByLocationHref()">
+                🔗 location.href 跳转到图片
+            </button>
+        </div>
+        
+        <div class="method-section">
+            <div class="method-title">方法2: window.location.assign 跳转</div>
+            <p>使用window.location.assign方法进行跳转</p>
+            <button class="test-button" onclick="jumpToImageByAssign()">
+                📍 window.location.assign 跳转
+            </button>
+        </div>
+        
+        <div class="method-section">
+            <div class="method-title">方法3: 链接点击</div>
+            <p>创建隐藏链接并模拟点击</p>
+            <button class="test-button" onclick="jumpToImageByLink()">
+                🔗 模拟链接点击跳转
+            </button>
+        </div>
+        
+        <div class="method-section">
+            <div class="method-title">方法4: 直接链接</div>
+            <p>真实的链接，直接点击跳转</p>
+            <a href="https://ep-redflow-s1.xhscdn.com/oa_attachments/104103ao31mf502chi806h0cjh53000000000009p2c4gu.png?sign=a5ac164777c81ed23f18bd8ccf7f093c&t=68d00ff9" 
+               class="test-button" 
+               style="display: inline-block; text-decoration: none;">
+                🖼️ 直接链接跳转到图片
+            </a>
+        </div>
+        
+        <div class="method-section">
+            <div class="method-title">方法5: 自定义协议测试</div>
+            <p>测试自定义协议是否能被拦截</p>
+            <button class="test-button" onclick="jumpToCustomScheme()">
+                🔧 自定义协议跳转
+            </button>
+        </div>
+        
+        <div class="log-area" id="logArea">
+            <div>📋 操作日志:</div>
+            <div>点击按钮测试不同的跳转方式...</div>
+        </div>
+
+        <div class="log-area" id="logArea">
+            <div>跳转微信:</div>
+            <button class="test-button" onclick="jumpToWeixin()">
+                🔧 跳转微信
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const imageUrl = "https://ep-redflow-s1.xhscdn.com/oa_attachments/104103ao31mf502chi806h0cjh53000000000009p2c4gu.png?sign=a5ac164777c81ed23f18bd8ccf7f093c&t=68d00ff9";
+        
+        function log(message) {
+            const logArea = document.getElementById('logArea');
+            const timestamp = new Date().toLocaleTimeString();
+            logArea.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        // 方法1: 使用location.href跳转
+        function jumpToImageByLocationHref() {
+            log('🔗 准备通过 location.href 跳转到图片...');
+            setTimeout(() => {
+                location.href = imageUrl;
+            }, 500);
+        }
+        
+        // 方法2: 使用window.location.assign跳转  
+        function jumpToImageByAssign() {
+            log('📍 准备通过 window.location.assign 跳转到图片...');
+            setTimeout(() => {
+                window.location.assign(imageUrl);
+            }, 500);
+        }
+        
+        // 方法3: 创建隐藏链接并点击
+        function jumpToImageByLink() {
+            log('🔗 准备通过模拟链接点击跳转到图片...');
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }, 500);
+        }
+        
+        // 方法4: 自定义协议测试
+        function jumpToCustomScheme() {
+            log('🔧 准备通过自定义协议跳转...');
+            setTimeout(() => {
+                // 测试自定义协议
+                location.href = 'redcity://jump?url=' + encodeURIComponent(imageUrl);
+            }, 500);
+        }
+        
+        // 方法5: 新窗口打开（可选）
+        function jumpToImageInNewWindow() {
+            log('🪟 准备在新窗口打开图片...');
+            window.open(imageUrl, '_blank');
+        }
+
+        function jumpToWeixin() {
+            log('🔧 准备跳转微信扫码...');
+            setTimeout(() => {
+                // 测试自定义协议
+                location.href = 'weixin://scanqrcode';
+            }, 500);
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            log('✅ 页面加载完成，准备测试 shouldOverrideUrl');
+            log('🖼️ 图片地址: ' + imageUrl);
+            log('💡 提示: 在WebView中，以上不同方法可能有不同的拦截效果');
+        });
+        
+        // 监听页面即将离开事件
+        window.addEventListener('beforeunload', function(e) {
+            console.log('页面即将跳转，shouldOverrideUrl应该被触发');
+        });
+    </script>
+</body>
+</html>
